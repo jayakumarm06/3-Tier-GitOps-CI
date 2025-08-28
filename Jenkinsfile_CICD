@@ -12,7 +12,9 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/jaiswaladi246/3-Tier-DevSecOps-Mega-Project.git'
+                git branch: 'main', 
+                    credentialsId: 'gitcred', 
+                    url: 'https://github.com/DevSecop-Project-Org/3-Tier-DevSecOps-project.git'
             }
         }
         
@@ -65,9 +67,9 @@ pipeline {
                 script {
                     withDockerRegistry(credentialsId: 'docker-cred') {
                         dir('api') {
-                            sh 'docker build -t adijaiswal/backend:latest .'
-                            sh 'trivy image --format table -o backend-image-report.html adijaiswal/backend:latest '
-                            sh 'docker push adijaiswal/backend:latest'
+                            sh 'docker build -t jaikumarm06/backend:latest .'
+                            sh 'trivy image --format table -o backend-image-report.html jaikumarm06/backend:latest '
+                            sh 'docker push jaikumarm06/backend:latest'
                            
                         }
                     }
@@ -80,53 +82,49 @@ pipeline {
                 script {
                     withDockerRegistry(credentialsId: 'docker-cred') {
                         dir('client') {
-                            sh 'docker build -t adijaiswal/frontend:latest .'
-                            sh 'trivy image --format table -o frontend-image-report.html adijaiswal/frontend:latest '
-                            sh 'docker push adijaiswal/frontend:latest'
+                            sh 'docker build -t jaikumarm06/frontend:latest .'
+                            sh 'trivy image --format table -o frontend-image-report.html jaikumarm06/frontend:latest '
+                            sh 'docker push jaikumarm06/frontend:latest'
                         }
                     }
                 }
             }
              
         }  
-        
-        stage('Manual Approval for Production') {
+        stage('manual approval for production') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
-                    input message: 'Approve deployment to PRODUCTION?', ok: 'Deploy'
+                    input message: 'Approve deployment to PRODUCTION?', ok: 'deploy'
                 }
             }
         }
-        
-       stage('Deployment To Prod') {
+        stage('Deployment to produ') {
             steps {
-                script {
-                    withKubeConfig(caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8-prod-token', namespace: 'prod', restrictKubeConfigAccess: false, serverUrl: 'https://AFC6FCFF5360B30D5E8950396E38A8C4.gr7.ap-south-1.eks.amazonaws.com') {
+               script {
+                   withKubeConfig(caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8-prod-token', namespace: 'prod', restrictKubeConfigAccess: false, serverUrl: 'https://EE07B6465E98C31EB6FD8B29A9495F5F.gr7.us-east-1.eks.amazonaws.com') {
                         sh 'kubectl apply -f k8s-prod/sc.yaml'
                         sleep 20
                         sh 'kubectl apply -f k8s-prod/mysql.yaml -n prod'
                         sh 'kubectl apply -f k8s-prod/backend.yaml -n prod'
                         sh 'kubectl apply -f k8s-prod/frontend.yaml -n prod'
-                        sh 'kubectl apply -f k8s-prod/ci.yaml'
                         sh 'kubectl apply -f k8s-prod/ingress.yaml -n prod'
+                        sh 'kubectl apply -f k8s-prod/ci.yaml'
                         sleep 30
                     }
-                }
+               }
             }
         }
-        
-        stage('Verify Deployment To Prod') {
+        stage('verify Deployment to produ') {
             steps {
-                script {
-                    withKubeConfig(caCertificate: '', clusterName: 'devopsshack-cluster', contextName: '', credentialsId: 'k8-prod-token', namespace: 'prod', restrictKubeConfigAccess: false, serverUrl: 'https://AFC6FCFF5360B30D5E8950396E38A8C4.gr7.ap-south-1.eks.amazonaws.com') {
-                        sh 'kubectl get pods -n prod'
+               script {
+                   withKubeConfig(caCertificate: '', clusterName: ' devopsshack-cluster', contextName: '', credentialsId: 'k8-prod-token', namespace: 'prod', restrictKubeConfigAccess: false, serverUrl: 'https://EE07B6465E98C31EB6FD8B29A9495F5F.gr7.us-east-1.eks.amazonaws.com') {
+                        sh 'kubectl get pod -n prod'
                         sleep 20
-                         sh 'kubectl get ingress -n prod'
-                        
+                        sh 'kubectl get ingress -n prod'
                     }
-                }
+               }
             }
         }
-            
+          
     }
-}
+} 
